@@ -10,6 +10,7 @@ import sys
 import pygments.lexers
 import pygments.styles
 import pygments.formatters
+from pygments.util import ClassNotFound
 
 from optrecord import TranslationUnit, Record, Expr, Stmt, SymtabNode
 from utils import find_records, log, get_effective_result
@@ -248,8 +249,13 @@ def make_per_source_file_html(build_dir, out_dir, tus, highest_count):
         if 0:
             print(code)
             print('*' * 76)
-
-        lexer = pygments.lexers.guess_lexer_for_filename(src_file, code)
+        try:
+            lexer = pygments.lexers.guess_lexer_for_filename(src_file, code)
+        except ClassNotFound:
+            # Guessing language by extension often does not work - e.g. for c++ standard headers ('string' et.al.).
+            # If this tool does get to be multi-lingual some day, need to pass the language as param - or fall back to
+            # HTMLs without syntax highlighting.
+            lexer = pygments.lexers.get_lexer_by_name("c")
 
         # Use pygments to convert it all to HTML:
         code_as_html = pygments.highlight(code, lexer, formatter)
